@@ -13,11 +13,16 @@ struct MemoRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            if isSelectionMode {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24))
-                    .foregroundColor(isSelected ? .blue : .secondary)
+            // ⭐ 固定选择区，不管是否选择模式都存在
+            ZStack {
+                if isSelectionMode {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 24))
+                        .foregroundColor(isSelected ? .blue : .secondary)
+                }
             }
+            .frame(width: 28, height: 28)   // ⭐ 固定宽度避免 Row 跳动
+            .opacity(isSelectionMode ? 1 : 0) // ⭐ 非选择模式保持透明占位
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(memo.text.isEmpty ? "No transcription available" : memo.text)
