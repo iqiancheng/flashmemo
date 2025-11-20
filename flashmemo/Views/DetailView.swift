@@ -10,6 +10,7 @@ struct DetailView: View {
     @State private var isEditing = false
     @State private var address: String?
     @State private var isLoadingAddress = false
+    @FocusState private var isTextEditorFocused: Bool
     
     private let locationService = LocationService()
     
@@ -93,7 +94,6 @@ struct DetailView: View {
                     .cornerRadius(12)
                 }
                 
-                Divider()
                 
                 // Text Content Section
                 VStack(alignment: .leading, spacing: 12) {
@@ -102,19 +102,6 @@ struct DetailView: View {
                             .foregroundColor(.blue)
                         Text("Transcription")
                             .font(.headline)
-                        Spacer()
-                        Button(action: {
-                            if isEditing {
-                                saveText()
-                            } else {
-                                editedText = memo.text
-                                isEditing = true
-                            }
-                        }) {
-                            Text(isEditing ? "Save" : "Edit")
-                                .font(.subheadline)
-                                .foregroundColor(.blue)
-                        }
                     }
                     
                     if isEditing {
@@ -127,20 +114,34 @@ struct DetailView: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color(.systemGray4), lineWidth: 1)
                             )
+                            .focused($isTextEditorFocused)
+                            .onChange(of: isTextEditorFocused) { focused in
+                                if !focused && isEditing {
+                                    // Lost focus, save automatically
+                                    saveText()
+                                }
+                            }
                     } else {
                         Text(memo.text.isEmpty ? "No transcription available" : memo.text)
                             .font(.body)
                             .foregroundColor(memo.text.isEmpty ? .secondary : .primary)
                             .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                // Double tap to edit
+                                editedText = memo.text
+                                isEditing = true
+                                isTextEditorFocused = true
+                            }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
                 
                 // Location Section
                 if let lat = memo.latitude, let lon = memo.longitude {
-                    Divider()
                     
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
