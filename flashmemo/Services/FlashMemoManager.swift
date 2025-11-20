@@ -35,10 +35,7 @@ class FlashMemoManager: ObservableObject {
             print("Failed to create ModelContainer: \(error)")
         }
         
-        // Setup audio buffer callback for real-time transcription
-        setupAudioBufferCallback()
-        
-        // Setup transcription update callback
+        // Setup transcription update callback (for UI updates if needed)
         senseVoiceService.onTranscriptionUpdate = { [weak self] transcription in
             DispatchQueue.main.async {
                 self?.currentTranscription = transcription
@@ -46,27 +43,13 @@ class FlashMemoManager: ObservableObject {
         }
     }
     
-    private func setupAudioBufferCallback() {
-        audioRecorder.onAudioBuffer = { [weak self] buffer in
-            guard let self = self else { return }
-            Task {
-                _ = await self.senseVoiceService.transcribeStream(buffer: buffer)
-            }
-        }
-    }
-    
     func startRecording() {
-        // 1. Warmup Model Immediately
-        Task {
-            await senseVoiceService.prepare()
-        }
-        
-        // 2. Reset transcription
+        // Reset transcription
         DispatchQueue.main.async {
             self.currentTranscription = ""
         }
         
-        // 3. Start Audio Recording
+        // Start Audio Recording (AAC format, hardware accelerated)
         let filename = "\(UUID().uuidString).m4a"
         if let url = audioRecorder.startRecording(filename: filename) {
             print("Started recording to \(url)")
@@ -78,26 +61,59 @@ class FlashMemoManager: ObservableObject {
     }
     
     func stopRecording() async {
+        // Stop recording (saves AAC file)
         audioRecorder.stopRecording()
         DispatchQueue.main.async {
             self.isRecording = false
         }
         
-        // 3. Finalize Transcription
-        let text = await senseVoiceService.finalize()
+        // Get audio file URL
+        guard let audioURL = audioRecorder.getCurrentAudioURL(),
+              let audioFilename = currentAudioFilename else {
+            print("No audio file URL available")
+            return
+        }
         
-        // Use actual filename from recorder
-        let audioFilename = currentAudioFilename ?? "\(UUID().uuidString).m4a"
-        
+        // Save memo immediately without transcription (will be updated later)
         let memo = Memo(
             audioFilename: audioFilename,
-            text: text.isEmpty ? currentTranscription : text,
+            text: "",  // Empty initially, will be updated after transcription
             timestamp: Date(),
             location: locationService.currentLocation
         )
         
-        // 4. Save to SwiftData
         await saveMemo(memo)
+        
+        // Start async transcription in background
+        Task.detached(priority: .userInitiated) { [weak self] in
+            guard let self = self else { return }
+            
+            // Prepare transcription service
+            await self.senseVoiceService.prepare()
+            
+            // Transcribe the complete audio file (better accuracy)
+            let transcription = await self.senseVoiceService.transcribeFile(url: audioURL)
+            
+            // Update memo with transcription
+            await MainActor.run {
+                guard let container = self.modelContainer else { return }
+                let context = container.mainContext
+                
+                // Find the memo by audio filename
+                let descriptor = FetchDescriptor<Memo>(
+                    predicate: #Predicate<Memo> { $0.audioFilename == audioFilename }
+                )
+                
+                if let memos = try? context.fetch(descriptor),
+                   let memo = memos.first {
+                    memo.text = transcription.isEmpty ? "No transcription available" : transcription
+                    try? context.save()
+                    
+                    // Update UI
+                    self.currentTranscription = transcription
+                }
+            }
+        }
         
         // Reset state
         DispatchQueue.main.async {

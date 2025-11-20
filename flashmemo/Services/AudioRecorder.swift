@@ -6,21 +6,13 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     // AVAudioRecorder for high-quality AAC recording (hardware accelerated, smooth playback)
     private var audioRecorder: AVAudioRecorder?
     
-    // AVAudioEngine for real-time audio buffer processing (for transcription only)
-    private var audioEngine: AVAudioEngine?
-    
     private var currentAudioURL: URL?
-    var onAudioBuffer: ((AVAudioPCMBuffer) -> Void)?
-    
-    // Format for transcription (16kHz)
-    private var transcriptionFormat: AVAudioFormat?
     
     @Published var isRecording = false
     
     func startRecording(filename: String) -> URL? {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            // Configure audio session to support both recording and engine
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setActive(true)
         } catch {
@@ -57,90 +49,15 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 print("Failed to start AVAudioRecorder")
                 return nil
             }
-        } catch {
-            print("Failed to create AVAudioRecorder: \(error)")
-            return nil
-        }
-        
-        // Setup AVAudioEngine for real-time buffer processing (for transcription only)
-        audioEngine = AVAudioEngine()
-        guard let audioEngine = audioEngine else {
-            audioRecorder?.stop()
-            return nil
-        }
-        
-        let inputNode = audioEngine.inputNode
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        
-        // Transcription format: 16kHz mono Float32 for transcription
-        transcriptionFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32,
-                                           sampleRate: 16000.0,
-                                           channels: 1,
-                                           interleaved: false)
-        
-        guard let transcriptionFormat = transcriptionFormat else {
-            print("Failed to create transcription format")
-            audioRecorder?.stop()
-            return nil
-        }
-        
-        // Install tap to get real-time audio buffers for transcription only
-        // Use a smaller buffer size to reduce latency
-        inputNode.installTap(onBus: 0, bufferSize: 2048, format: inputFormat) { [weak self] (buffer, time) in
-            guard let self = self else { return }
             
-            // Convert to transcription format (16kHz) for transcription
-            if let transcriptionFormat = self.transcriptionFormat,
-               let convertedBuffer = self.convertBuffer(buffer, to: transcriptionFormat) {
-                // Send buffer for real-time transcription (async to avoid blocking)
-                DispatchQueue.global(qos: .userInitiated).async {
-                    self.onAudioBuffer?(convertedBuffer)
-                }
-            }
-        }
-        
-        // Start audio engine
-        do {
-            try audioEngine.prepare()
-            try audioEngine.start()
             DispatchQueue.main.async {
                 self.isRecording = true
             }
             return audioFilename
         } catch {
-            print("Could not start audio engine: \(error)")
-            audioRecorder?.stop()
+            print("Failed to create AVAudioRecorder: \(error)")
             return nil
         }
-    }
-    
-    private func convertBuffer(_ buffer: AVAudioPCMBuffer, to format: AVAudioFormat) -> AVAudioPCMBuffer? {
-        guard buffer.format.isEqual(format) == false else {
-            return buffer
-        }
-        
-        guard let converter = AVAudioConverter(from: buffer.format, to: format) else {
-            return nil
-        }
-        
-        guard let convertedBuffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: buffer.frameLength) else {
-            return nil
-        }
-        
-        var error: NSError?
-        let inputBlock: AVAudioConverterInputBlock = { _, outStatus in
-            outStatus.pointee = .haveData
-            return buffer
-        }
-        
-        converter.convert(to: convertedBuffer, error: &error, withInputFrom: inputBlock)
-        
-        if let error = error {
-            print("Buffer conversion error: \(error)")
-            return nil
-        }
-        
-        return convertedBuffer
     }
     
     func stopRecording() {
@@ -148,13 +65,70 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
         audioRecorder?.stop()
         audioRecorder = nil
         
-        // Stop AVAudioEngine
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-        audioEngine = nil
-        
         DispatchQueue.main.async {
             self.isRecording = false
+        }
+    }
+    
+    /// Convert AAC file to 16kHz PCM buffers for transcription
+    func convertAACToPCMBuffers(audioURL: URL, completion: @escaping ([AVAudioPCMBuffer]) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let audioFile = try? AVAudioFile(forReading: audioURL) else {
+                print("Failed to open audio file for reading")
+                completion([])
+                return
+            }
+            
+            // Target format: 16kHz mono Float32 for transcription
+            guard let targetFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32,
+                                                  sampleRate: 16000.0,
+                                                  channels: 1,
+                                                  interleaved: false) else {
+                print("Failed to create target format")
+                completion([])
+                return
+            }
+            
+            var buffers: [AVAudioPCMBuffer] = []
+            let bufferSize: AVAudioFrameCount = 4096
+            
+            // Read and convert audio file
+            while let buffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: bufferSize) {
+                do {
+                    try audioFile.read(into: buffer, frameCount: bufferSize)
+                    let frameCount = buffer.frameLength
+                    if frameCount == 0 {
+                        break
+                    }
+                    
+                    // Convert if needed
+                    if !audioFile.processingFormat.isEqual(targetFormat) {
+                        guard let converter = AVAudioConverter(from: audioFile.processingFormat, to: targetFormat),
+                              let convertedBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCount) else {
+                            continue
+                        }
+                        
+                        var error: NSError?
+                        let inputBlock: AVAudioConverterInputBlock = { _, outStatus in
+                            outStatus.pointee = .haveData
+                            return buffer
+                        }
+                        
+                        converter.convert(to: convertedBuffer, error: &error, withInputFrom: inputBlock)
+                        
+                        if error == nil {
+                            buffers.append(convertedBuffer)
+                        }
+                    } else {
+                        buffers.append(buffer)
+                    }
+                } catch {
+                    print("Error reading audio file: \(error)")
+                    break
+                }
+            }
+            
+            completion(buffers)
         }
     }
     

@@ -6,6 +6,7 @@ protocol SenseVoiceServiceProtocol {
     func prepare() async
     func transcribeStream(buffer: AVAudioPCMBuffer) async -> String
     func finalize() async -> String
+    func transcribeFile(url: URL) async -> String
     var currentTranscription: String { get }
     var onTranscriptionUpdate: ((String) -> Void)? { get set }
 }
@@ -126,5 +127,65 @@ class LocalSenseVoiceService: SenseVoiceServiceProtocol {
         currentTranscription = ""
         
         return finalResult.isEmpty ? "No transcription available" : finalResult
+    }
+    
+    /// Transcribe audio file directly (better accuracy than streaming)
+    func transcribeFile(url: URL) async -> String {
+        // Ensure speech recognizer is available
+        if speechRecognizer == nil || !(speechRecognizer?.isAvailable ?? false) {
+            await prepare()
+        }
+        
+        guard let speechRecognizer = speechRecognizer, speechRecognizer.isAvailable else {
+            return ""
+        }
+        
+        // Request authorization if needed
+        await requestAuthorization()
+        
+        // Create file recognition request
+        let recognitionRequest = SFSpeechURLRecognitionRequest(url: url)
+        recognitionRequest.shouldReportPartialResults = true  // Get partial results too
+        recognitionRequest.taskHint = .dictation
+        
+        return await withCheckedContinuation { continuation in
+            var finalTranscription = ""
+            var hasResumed = false
+            
+            let recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { result, error in
+                if let error = error {
+                    print("File recognition error: \(error.localizedDescription)")
+                    if !hasResumed {
+                        hasResumed = true
+                        // Return partial result if available, otherwise empty string
+                        continuation.resume(returning: finalTranscription.isEmpty ? "" : finalTranscription)
+                    }
+                    return
+                }
+                
+                if let result = result {
+                    finalTranscription = result.bestTranscription.formattedString
+                    
+                    // Resume when final result is available
+                    if result.isFinal && !hasResumed {
+                        hasResumed = true
+                        continuation.resume(returning: finalTranscription)
+                    }
+                }
+            }
+            
+            // Cancel task after timeout (60 seconds for longer recordings)
+            Task {
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                if !hasResumed {
+                    recognitionTask.cancel()
+                    // If cancelled, return whatever transcription we have so far
+                    if !hasResumed {
+                        hasResumed = true
+                        continuation.resume(returning: finalTranscription)
+                    }
+                }
+            }
+        }
     }
 }

@@ -87,6 +87,7 @@ struct DetailView: View {
                             }
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
@@ -149,7 +150,7 @@ struct DetailView: View {
                                 .font(.headline)
                         }
                         
-                        // Address
+                        // Address and Coordinates in one line
                         if isLoadingAddress {
                             HStack {
                                 ProgressView()
@@ -158,26 +159,24 @@ struct DetailView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
-                        } else if let address = address {
-                            HStack(alignment: .top) {
-                                Image(systemName: "mappin.circle")
+                        } else {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: address != nil ? "mappin.circle" : "location.circle")
                                     .foregroundColor(.secondary)
-                                Text(address)
                                     .font(.subheadline)
-                            }
-                        }
-                        
-                        // Coordinates
-                        HStack(alignment: .top) {
-                            Image(systemName: "location.circle")
-                                .foregroundColor(.secondary)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Latitude: \(String(format: "%.6f", lat))")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("Longitude: \(String(format: "%.6f", lon))")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                
+                                HStack(spacing: 12) {
+                                    if let address = address {
+                                        Text(address)
+                                            .font(.subheadline)
+                                            .lineLimit(2)
+                                    }
+                                    
+                                    // Text("\(String(format: "%.4f", lat)), \(String(format: "%.4f", lon))")
+                                    //     .font(.caption)
+                                    //     .foregroundColor(.secondary)
+                                    //     .padding(.leading, address != nil ? 8 : 0)
+                                }
                             }
                         }
                         
@@ -191,6 +190,8 @@ struct DetailView: View {
                         }
                         .frame(height: 200)
                         .cornerRadius(12)
+                        .padding(.horizontal, -16) // Remove horizontal padding to extend to edges
+                        .padding(.bottom, -16) // Remove bottom padding
                     }
                     .padding()
                     .background(Color(.systemGray6))
