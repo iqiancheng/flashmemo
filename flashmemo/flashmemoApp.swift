@@ -1,32 +1,32 @@
-//
-//  flashmemoApp.swift
-//  flashmemo
-//
-//  Created by qian.cheng on 11/20/25.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
-struct flashmemoApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+struct FlashMemoApp: App {
+    let container: ModelContainer
+    
+    init() {
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let schema = Schema([Memo.self])
+            let modelConfiguration: ModelConfiguration
+            
+            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppConfig.appGroupIdentifier) {
+                let databaseURL = containerURL.appendingPathComponent("FlashMemo.store")
+                modelConfiguration = ModelConfiguration(schema: schema, url: databaseURL)
+            } else {
+                modelConfiguration = ModelConfiguration(schema: schema)
+            }
+            
+            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            fatalError("Failed to create ModelContainer: \(error)")
         }
-    }()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TimelineView()
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(container)
     }
 }

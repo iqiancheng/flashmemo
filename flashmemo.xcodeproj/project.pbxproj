@@ -6,14 +6,99 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E2069FB02ECED87D00365FC2 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2069FAF2ECED87D00365FC2 /* WidgetKit.framework */; };
+		E2069FB22ECED87D00365FC2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2069FB12ECED87D00365FC2 /* SwiftUI.framework */; };
+		E2069FC32ECED87F00365FC2 /* FlashMemoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E2069FAD2ECED87D00365FC2 /* FlashMemoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E2069FC12ECED87F00365FC2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E2069F672ECEC6F800365FC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E2069FAC2ECED87D00365FC2;
+			remoteInfo = FlashMemoWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E2069FC82ECED87F00365FC2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				E2069FC32ECED87F00365FC2 /* FlashMemoWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		E2069F6F2ECEC6F800365FC2 /* flashmemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = flashmemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2069FAD2ECED87D00365FC2 /* FlashMemoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlashMemoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2069FAF2ECED87D00365FC2 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		E2069FB12ECED87D00365FC2 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E2069FD02ECED8FE00365FC2 /* Exceptions for "flashmemo" folder in "FlashMemoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppConfig.swift,
+				Assets.xcassets,
+				Models/Memo.swift,
+				Services/AudioRecorder.swift,
+				Services/FlashMemoManager.swift,
+				Services/LocationService.swift,
+				Services/SenseVoiceService.swift,
+			);
+			target = E2069FAC2ECED87D00365FC2 /* FlashMemoWidgetExtension */;
+		};
+		E2069FE82ECEDB7E00365FC2 /* Exceptions for "FlashMemoWidget" folder in "FlashMemoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"/Localized: Info.plist",
+				AppManager.swift,
+				Info.plist,
+			);
+			target = E2069FAC2ECED87D00365FC2 /* FlashMemoWidgetExtension */;
+		};
+		E2069FE92ECEDB8500365FC2 /* Exceptions for "FlashMemoWidget" folder in "flashmemo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E2069F6E2ECEC6F800365FC2 /* flashmemo */;
+		};
+		E2069FF32ECEE7E400365FC2 /* Exceptions for "flashmemo" folder in "flashmemo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E2069F6E2ECEC6F800365FC2 /* flashmemo */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E2069F712ECEC6F800365FC2 /* flashmemo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E2069FF32ECEE7E400365FC2 /* Exceptions for "flashmemo" folder in "flashmemo" target */,
+				E2069FD02ECED8FE00365FC2 /* Exceptions for "flashmemo" folder in "FlashMemoWidgetExtension" target */,
+			);
 			path = flashmemo;
+			sourceTree = "<group>";
+		};
+		E2069FB32ECED87D00365FC2 /* FlashMemoWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E2069FE92ECEDB8500365FC2 /* Exceptions for "FlashMemoWidget" folder in "flashmemo" target */,
+				E2069FE82ECEDB7E00365FC2 /* Exceptions for "FlashMemoWidget" folder in "FlashMemoWidgetExtension" target */,
+			);
+			path = FlashMemoWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,6 +111,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E2069FAA2ECED87D00365FC2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2069FB22ECED87D00365FC2 /* SwiftUI.framework in Frameworks */,
+				E2069FB02ECED87D00365FC2 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -33,6 +127,8 @@
 			isa = PBXGroup;
 			children = (
 				E2069F712ECEC6F800365FC2 /* flashmemo */,
+				E2069FB32ECED87D00365FC2 /* FlashMemoWidget */,
+				E2069FAE2ECED87D00365FC2 /* Frameworks */,
 				E2069F702ECEC6F800365FC2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +137,18 @@
 			isa = PBXGroup;
 			children = (
 				E2069F6F2ECEC6F800365FC2 /* flashmemo.app */,
+				E2069FAD2ECED87D00365FC2 /* FlashMemoWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E2069FAE2ECED87D00365FC2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E2069FAF2ECED87D00365FC2 /* WidgetKit.framework */,
+				E2069FB12ECED87D00365FC2 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,13 +161,16 @@
 				E2069F6B2ECEC6F800365FC2 /* Sources */,
 				E2069F6C2ECEC6F800365FC2 /* Frameworks */,
 				E2069F6D2ECEC6F800365FC2 /* Resources */,
+				E2069FC82ECED87F00365FC2 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E2069FC22ECED87F00365FC2 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				E2069F712ECEC6F800365FC2 /* flashmemo */,
+				E2069FB32ECED87D00365FC2 /* FlashMemoWidget */,
 			);
 			name = flashmemo;
 			packageProductDependencies = (
@@ -69,6 +178,28 @@
 			productName = flashmemo;
 			productReference = E2069F6F2ECEC6F800365FC2 /* flashmemo.app */;
 			productType = "com.apple.product-type.application";
+		};
+		E2069FAC2ECED87D00365FC2 /* FlashMemoWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E2069FC52ECED87F00365FC2 /* Build configuration list for PBXNativeTarget "FlashMemoWidgetExtension" */;
+			buildPhases = (
+				E2069FA92ECED87D00365FC2 /* Sources */,
+				E2069FAA2ECED87D00365FC2 /* Frameworks */,
+				E2069FAB2ECED87D00365FC2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E2069FB32ECED87D00365FC2 /* FlashMemoWidget */,
+			);
+			name = FlashMemoWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = FlashMemoWidgetExtension;
+			productReference = E2069FAD2ECED87D00365FC2 /* FlashMemoWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +212,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					E2069F6E2ECEC6F800365FC2 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					E2069FAC2ECED87D00365FC2 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -100,12 +234,20 @@
 			projectRoot = "";
 			targets = (
 				E2069F6E2ECEC6F800365FC2 /* flashmemo */,
+				E2069FAC2ECED87D00365FC2 /* FlashMemoWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		E2069F6D2ECEC6F800365FC2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2069FAB2ECED87D00365FC2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +264,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E2069FA92ECED87D00365FC2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E2069FC22ECED87F00365FC2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E2069FAC2ECED87D00365FC2 /* FlashMemoWidgetExtension */;
+			targetProxy = E2069FC12ECED87F00365FC2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E2069F7A2ECEC6FA00365FC2 /* Debug */ = {
@@ -256,6 +413,7 @@
 				DEVELOPMENT_TEAM = AXF5ML8K4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = flashmemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +446,7 @@
 				DEVELOPMENT_TEAM = AXF5ML8K4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = flashmemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -303,6 +462,66 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E2069FC62ECED87F00365FC2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AXF5ML8K4N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlashMemoWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FlashMemoWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.iqiancheng.flashmemo.FlashMemoWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E2069FC72ECED87F00365FC2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AXF5ML8K4N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlashMemoWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FlashMemoWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.iqiancheng.flashmemo.FlashMemoWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -327,6 +546,15 @@
 			buildConfigurations = (
 				E2069F7D2ECEC6FA00365FC2 /* Debug */,
 				E2069F7E2ECEC6FA00365FC2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E2069FC52ECED87F00365FC2 /* Build configuration list for PBXNativeTarget "FlashMemoWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2069FC62ECED87F00365FC2 /* Debug */,
+				E2069FC72ECED87F00365FC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
