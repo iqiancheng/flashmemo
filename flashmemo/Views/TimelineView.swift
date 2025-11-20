@@ -10,6 +10,7 @@ struct TimelineView: View {
     @State private var isSearchActive = false
     @State private var isSelectionMode = false
     @State private var selectedMemos: Set<UUID> = []
+    @State private var showingSettings = false
     
     var filteredMemos: [Memo] {
         if searchText.isEmpty {
@@ -50,6 +51,15 @@ struct TimelineView: View {
                 }
                 .navigationTitle("All Recordings")
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: {
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {
                             withAnimation {
@@ -80,6 +90,9 @@ struct TimelineView: View {
                                 .foregroundColor(.primary)
                         }
                     }
+                }
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView()
                 }
                 .searchable(text: $searchText, isPresented: $isSearchActive)
                 

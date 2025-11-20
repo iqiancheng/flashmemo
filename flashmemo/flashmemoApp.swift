@@ -7,7 +7,7 @@ struct FlashMemoApp: App {
     
     init() {
         do {
-            let schema = Schema([Memo.self])
+            let schema = Schema([Memo.self, UserSettings.self, ProperNoun.self])
             let modelConfiguration: ModelConfiguration
             
             if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppConfig.appGroupIdentifier) {
