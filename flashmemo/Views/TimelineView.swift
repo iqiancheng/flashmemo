@@ -11,6 +11,9 @@ struct TimelineView: View {
     @State private var isSelectionMode = false
     @State private var selectedMemos: Set<UUID> = []
     @State private var showingSettings = false
+    @State private var lastTapTime: Date?
+    @State private var isLongPressing = false
+    private let tapDebounceInterval: TimeInterval = 0.3 // 300ms debounce
     
     var filteredMemos: [Memo] {
         if searchText.isEmpty {
@@ -100,20 +103,9 @@ struct TimelineView: View {
                 VStack {
                     Spacer()
                     if !isSelectionMode {  // 添加条件判断
-                        Button(action: toggleRecording) {
-                            ZStack {
-                                Circle()
-                                    .fill(manager.isRecording ? Color.red : Color.blue)
-                                    .frame(width: 70, height: 70)
-                                    .shadow(color: (manager.isRecording ? Color.red : Color.blue).opacity(0.4), radius: 10, x: 0, y: 5)
-                                
-                                Image(systemName: manager.isRecording ? "stop.fill" : "mic.fill")
-                                    .font(.system(size: 28, weight: .medium))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        .padding(.bottom, 30)
-                        .transition(.opacity)  // 添加淡入淡出过渡效果
+                        recordingButton
+                            .padding(.bottom, 30)
+                            .transition(.opacity)  // 添加淡入淡出过渡效果
                     }
                 }
                 
@@ -178,12 +170,58 @@ struct TimelineView: View {
         }
     }
     
+    private var recordingButton: some View {
+        ZStack {
+            Circle()
+                .fill(manager.isRecording ? Color.red : Color.blue)
+                .frame(width: 70, height: 70)
+                .shadow(color: (manager.isRecording ? Color.red : Color.blue).opacity(0.4), radius: 10, x: 0, y: 5)
+            
+            if manager.isRecording {
+                // Show sound wave animation when recording
+                SoundWaveView()
+            } else {
+                // Show microphone icon when not recording
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 28, weight: .medium))
+                    .foregroundColor(.white)
+            }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    // Start recording when press begins (if not already recording)
+                    if !manager.isRecording && !isLongPressing {
+                        isLongPressing = true
+                        manager.startRecording()
+                    }
+                }
+                .onEnded { _ in
+                    // Stop recording and transcribe when press ends
+                    isLongPressing = false
+                    if manager.isRecording {
+                        Task {
+                            await manager.stopRecording()
+                        }
+                    }
+                }
+        )
+    }
+    
     private func toggleRecording() {
+        // Debounce: prevent rapid repeated taps
+        let now = Date()
+        if let lastTap = lastTapTime, now.timeIntervalSince(lastTap) < tapDebounceInterval {
+            return
+        }
+        lastTapTime = now
+        
         if manager.isRecording {
             Task {
                 await manager.stopRecording()
             }
         } else {
+            // Start recording asynchronously - UI will update optimistically
             manager.startRecording()
         }
     }

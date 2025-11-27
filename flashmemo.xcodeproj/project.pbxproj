@@ -51,6 +51,7 @@
 				Assets.xcassets,
 				Models/Memo.swift,
 				Services/AudioRecorder.swift,
+				Services/CoordinateConverter.swift,
 				Services/FlashMemoManager.swift,
 				Services/LocationService.swift,
 				Services/SenseVoiceService.swift,

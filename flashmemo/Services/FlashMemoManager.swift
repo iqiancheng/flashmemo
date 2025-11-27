@@ -44,18 +44,30 @@ class FlashMemoManager: ObservableObject {
     }
     
     func startRecording() {
-        // Reset transcription
+        // Request fresh location update when starting recording
+        locationService.requestLocation()
+        
+        // Optimistically update UI immediately to avoid lag
         DispatchQueue.main.async {
             self.currentTranscription = ""
+            self.isRecording = true
         }
         
-        // Start Audio Recording (AAC format, hardware accelerated)
+        // Start Audio Recording asynchronously (AAC format, hardware accelerated)
         let filename = "\(UUID().uuidString).m4a"
-        if let url = audioRecorder.startRecording(filename: filename) {
-            print("Started recording to \(url)")
-            DispatchQueue.main.async {
-                self.isRecording = true
-                self.currentAudioFilename = url.lastPathComponent
+        Task {
+            if let url = await audioRecorder.startRecording(filename: filename) {
+                print("Started recording to \(url)")
+                await MainActor.run {
+                    self.isRecording = true
+                    self.currentAudioFilename = url.lastPathComponent
+                }
+            } else {
+                // If recording failed, revert UI state
+                await MainActor.run {
+                    self.isRecording = false
+                    self.currentAudioFilename = nil
+                }
             }
         }
     }

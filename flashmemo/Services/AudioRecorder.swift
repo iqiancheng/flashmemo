@@ -10,53 +10,79 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     
     @Published var isRecording = false
     
-    func startRecording(filename: String) -> URL? {
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession.setActive(true)
-        } catch {
-            print("Failed to set up audio session: \(error)")
-            return nil
-        }
-        
-        var docDir: URL?
-        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppConfig.appGroupIdentifier) {
-            docDir = groupURL
-        } else {
-            docDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-        }
-        
-        guard let storageDir = docDir else { return nil }
-        let audioFilename = storageDir.appendingPathComponent(filename)
-        currentAudioURL = audioFilename
-        
-        // Setup AVAudioRecorder for high-quality AAC recording (hardware accelerated)
-        let recorderSettings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100.0,  // Standard sample rate for playback
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-            AVEncoderBitRateKey: 128000  // 128 kbps for good quality
-        ]
-        
-        do {
-            audioRecorder = try AVAudioRecorder(url: audioFilename, settings: recorderSettings)
-            audioRecorder?.delegate = self
-            audioRecorder?.prepareToRecord()
-            
-            guard audioRecorder?.record() == true else {
-                print("Failed to start AVAudioRecorder")
-                return nil
+    // Async version to avoid blocking UI thread
+    func startRecording(filename: String) async -> URL? {
+        return await withCheckedContinuation { continuation in
+            Task.detached(priority: .userInitiated) { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                
+                let audioSession = AVAudioSession.sharedInstance()
+                do {
+                    try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+                    try audioSession.setActive(true)
+                } catch {
+                    print("Failed to set up audio session: \(error)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+                
+                var docDir: URL?
+                if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppConfig.appGroupIdentifier) {
+                    docDir = groupURL
+                } else {
+                    docDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+                }
+                
+                guard let storageDir = docDir else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                
+                let audioFilename = storageDir.appendingPathComponent(filename)
+                
+                // Setup AVAudioRecorder for high-quality AAC recording (hardware accelerated)
+                let recorderSettings: [String: Any] = [
+                    AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                    AVSampleRateKey: 44100.0,  // Standard sample rate for playback
+                    AVNumberOfChannelsKey: 1,
+                    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+                    AVEncoderBitRateKey: 128000  // 128 kbps for good quality
+                ]
+                
+                do {
+                    let recorder = try AVAudioRecorder(url: audioFilename, settings: recorderSettings)
+                    recorder.delegate = self
+                    
+                    // Prepare recording synchronously to minimize delay
+                    guard recorder.prepareToRecord() else {
+                        print("Failed to prepare AVAudioRecorder")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    // Start recording immediately after preparation to avoid losing initial audio
+                    guard recorder.record() else {
+                        print("Failed to start AVAudioRecorder")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    // Update state on main thread
+                    await MainActor.run {
+                        self.audioRecorder = recorder
+                        self.currentAudioURL = audioFilename
+                        self.isRecording = true
+                    }
+                    
+                    continuation.resume(returning: audioFilename)
+                } catch {
+                    print("Failed to create AVAudioRecorder: \(error)")
+                    continuation.resume(returning: nil)
+                }
             }
-            
-            DispatchQueue.main.async {
-                self.isRecording = true
-            }
-            return audioFilename
-        } catch {
-            print("Failed to create AVAudioRecorder: \(error)")
-            return nil
         }
     }
     
