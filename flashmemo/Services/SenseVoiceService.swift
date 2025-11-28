@@ -145,7 +145,9 @@ class LocalSenseVoiceService: SenseVoiceServiceProtocol {
         
         // Create file recognition request
         let recognitionRequest = SFSpeechURLRecognitionRequest(url: url)
-        recognitionRequest.shouldReportPartialResults = true  // Get partial results too
+        // Set to false to only get final complete result, ensuring we capture the entire audio
+        // This prevents partial results from overwriting previous segments in long recordings
+        recognitionRequest.shouldReportPartialResults = false
         recognitionRequest.taskHint = .dictation
         
         return await withCheckedContinuation { continuation in
@@ -157,32 +159,37 @@ class LocalSenseVoiceService: SenseVoiceServiceProtocol {
                     print("File recognition error: \(error.localizedDescription)")
                     if !hasResumed {
                         hasResumed = true
-                        // Return partial result if available, otherwise empty string
+                        // Return whatever transcription we have, or empty string if none
                         continuation.resume(returning: finalTranscription.isEmpty ? "" : finalTranscription)
                     }
                     return
                 }
                 
                 if let result = result {
+                    // With shouldReportPartialResults = false, we only get final results
+                    // This ensures bestTranscription contains the complete transcription of the entire audio file
                     finalTranscription = result.bestTranscription.formattedString
+                    print("Transcription received: \(finalTranscription.prefix(50))... (length: \(finalTranscription.count))")
                     
-                    // Resume when final result is available
+                    // Since shouldReportPartialResults = false, result.isFinal should always be true
                     if result.isFinal && !hasResumed {
                         hasResumed = true
-                        continuation.resume(returning: finalTranscription)
+                        continuation.resume(returning: finalTranscription.isEmpty ? "No transcription available" : finalTranscription)
                     }
                 }
             }
             
-            // Cancel task after timeout (60 seconds for longer recordings)
+            // Increase timeout for longer recordings (up to 5 minutes)
+            // Calculate timeout based on estimated audio duration (roughly 2x audio length + buffer)
             Task {
-                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                // Wait up to 5 minutes for very long recordings
+                try? await Task.sleep(nanoseconds: 300_000_000_000) // 5 minutes
                 if !hasResumed {
+                    print("Transcription timeout - returning partial result")
                     recognitionTask.cancel()
-                    // If cancelled, return whatever transcription we have so far
                     if !hasResumed {
                         hasResumed = true
-                        continuation.resume(returning: finalTranscription)
+                        continuation.resume(returning: finalTranscription.isEmpty ? "" : finalTranscription)
                     }
                 }
             }
