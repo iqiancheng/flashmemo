@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct SoundWaveView: View {
-    @State private var animationPhase: Double = 0
-    @State private var timer: Timer?
+    @ObservedObject var audioRecorder: AudioRecorder
     let barCount: Int = 5
     let barWidth: CGFloat = 4
     let barSpacing: CGFloat = 3
@@ -15,39 +14,23 @@ struct SoundWaveView: View {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(Color.white)
                     .frame(width: barWidth, height: barHeight(for: index))
+                    .animation(.easeOut(duration: 0.05), value: audioRecorder.audioLevels)
             }
-        }
-        .onAppear {
-            startAnimation()
-        }
-        .onDisappear {
-            stopAnimation()
         }
     }
     
     private func barHeight(for index: Int) -> CGFloat {
-        // Create a wave pattern with different phases for each bar
-        let baseDelay = Double(index) * 0.2
-        let phase = (animationPhase + baseDelay).truncatingRemainder(dividingBy: 2.0 * .pi)
-        let normalized = (sin(phase) + 1.0) / 2.0 // Normalize to 0-1
-        
-        return minHeight + (maxHeight - minHeight) * CGFloat(normalized)
-    }
-    
-    private func startAnimation() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            withAnimation(.linear(duration: 0.1)) {
-                animationPhase += 0.2
-                if animationPhase >= 2.0 * .pi {
-                    animationPhase = 0
-                }
-            }
+        // Use real audio level if available, otherwise use minimum height
+        let level: Float
+        if index < audioRecorder.audioLevels.count {
+            level = audioRecorder.audioLevels[index]
+        } else {
+            level = 0.0
         }
-    }
-    
-    private func stopAnimation() {
-        timer?.invalidate()
-        timer = nil
+        
+        // Convert normalized level (0.0-1.0) to height
+        let height = minHeight + (maxHeight - minHeight) * CGFloat(level)
+        return max(minHeight, height) // Ensure minimum height
     }
 }
 

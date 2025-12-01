@@ -178,8 +178,8 @@ struct TimelineView: View {
                 .shadow(color: (manager.isRecording ? Color.red : Color.blue).opacity(0.4), radius: 10, x: 0, y: 5)
             
             if manager.isRecording {
-                // Show sound wave animation when recording
-                SoundWaveView()
+                // Show sound wave animation with real audio levels when recording
+                SoundWaveView(audioRecorder: manager.audioRecorder)
             } else {
                 // Show microphone icon when not recording
                 Image(systemName: "mic.fill")
